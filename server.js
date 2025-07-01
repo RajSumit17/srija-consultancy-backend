@@ -7,7 +7,7 @@ import jobRouter from "./router/jobRouter.js";
 import candidateRouter from "./router/candidateRouter.js";
 import router from "./router/notifyRouter.js";
 import recruiterRouter from "./router/recruiterRouter.js";
-import insertData from "./dummyDataInsertion.js";
+// import insertData from "./dummyDataInsertion.js";
 config();
 // insertData(); 
 
