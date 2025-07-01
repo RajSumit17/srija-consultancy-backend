@@ -186,6 +186,9 @@ export const updateRequestedJob = async (req, res) => {
   try {
     const { jobId, email, updatedData } = req.body;
 
+    console.log("➡️ Incoming update request:", { jobId, email, updatedData });
+
+    // Step 1: Find recruiter by email
     const recruiterRef = collection(db, "recruiters");
     const q = query(recruiterRef, where("email", "==", email));
     const querySnapshot = await getDocs(q);
@@ -200,26 +203,36 @@ export const updateRequestedJob = async (req, res) => {
 
     let jobsRequested = recruiterData.jobsRequested || [];
 
+    // Step 2: Find the job by jobId
     const jobIndex = jobsRequested.findIndex((job) => job.requestId === jobId);
-
     if (jobIndex === -1) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    // Update only the required fields
-    jobsRequested[jobIndex] = {
-      ...jobsRequested[jobIndex],
-      ...updatedData,
+    // Step 3: Update the specific job (log old and new for debug)
+    const oldJob = jobsRequested[jobIndex];
+    const updatedJob = {
+      ...oldJob,
+      ...updatedData, // ✅ Overwrite fields like `title`, `description`, etc.
     };
 
-    // Save the updated jobsRequested array back to Firestore
+    console.log("🔁 Old Job:", oldJob);
+    console.log("✅ New Job:", updatedJob);
+
+    jobsRequested[jobIndex] = updatedJob;
+
+    // Step 4: Write back updated array to Firestore
     await updateDoc(recruiterDocRef, {
       jobsRequested: jobsRequested,
     });
 
+    // Step 5: Confirm write
+    console.log("✅ Job updated successfully.");
     return res.status(200).json({ message: "Job updated successfully" });
+
   } catch (error) {
-    console.error("Error updating requested job:", error);
+    console.error("❌ Error updating requested job:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+

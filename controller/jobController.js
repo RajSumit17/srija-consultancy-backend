@@ -7,7 +7,9 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  getCountFromServer,
 } from "firebase/firestore";
+import { jobs } from "googleapis/build/src/apis/jobs/index.js";
 import { v4 as uuidv4 } from "uuid";
 
 export const addNewJobPosting = async (req, res) => {
@@ -50,18 +52,71 @@ export const addNewJobPosting = async (req, res) => {
 
 export const fetchAllJobs = async (req, res) => {
   try {
-    const querySnapshot = await getDocs(collection(db, "jobs"));
+    const jobsByCategory = {};
 
-    const jobs = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // 1. Get all category documents inside "jobs"
+    const categoryDocs = await getDocs(collection(db, "jobs"));
+    // console.log(categoryDocs.docs)
+    for (const docSnap of categoryDocs.docs) {
+      // console.log(docSnap.data)
+      const category = docSnap.id; // e.g., "Admin Jobs" (or "Admin Jobs-or-Robotics")
+      const safeCategory = category; // Use as-is, unless you're decoding a transformation
 
-    res.status(200).json({ jobs: jobs });
+      // 2. Access the subcollection "list" under each category
+      const listRef = collection(db, "jobs", safeCategory, "list");
+      const listSnapshot = await getDocs(listRef);
+
+      const jobs = listSnapshot.docs.map((jobDoc) => ({
+        id: jobDoc.id,
+        ...jobDoc.data()
+      }));
+
+      jobsByCategory[category] = jobs;
+    }
+
+    return res.status(200).json(jobsByCategory);
   } catch (error) {
-    return res.status(500).json({ error: "Something went wrong" });
+    console.error("Error fetching jobs:", error.message);
+    return res.status(500).json({ error: error.message });
   }
 };
+
+export const getJobByCategory = async(req,res)=>{
+  try {
+    const {category} = req.body;
+    const safeCategory = category.replace(/\//g, "-or-");
+
+    const listRef = collection(db,"jobs",safeCategory,"list");
+
+    const jobsSnapshot = await getDocs(listRef);
+
+    const jobs = jobsSnapshot.docs.map(doc=>({
+      id:doc.id,
+      ...doc.data()
+    }))
+
+    return res.status(200).json(jobs);
+  } catch (error) {
+    return res.status(500).json({message:error.message})
+  }
+}
+
+export const getJobCategory = async(req,res)=>{
+  try {
+    const categoryDocs = await getDocs(collection(db,"jobs"));
+    const jobCategory = []
+    for(const category of categoryDocs.docs){
+      const categoryId = category.id;
+      const categoryCollection = collection(db,"jobs",categoryId,"list");
+      const snapshot = await getCountFromServer(categoryCollection);
+
+      jobCategory.push({"name":category.get("name"),"count":snapshot.data().count});
+    }
+    return res.status(200).json({categories:jobCategory})
+  } catch (error) {
+    return res.status(500).json({message:error.message}) 
+  }
+}
 
 export const getJob = async (req, res) => {
   try {

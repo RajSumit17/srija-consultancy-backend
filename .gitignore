@@ -2,7 +2,8 @@
 node_modules/
 key_path_service_account.json
 utils/serviceAccountKey.json
-
+dummyData/
+dummyDataInsertion.js
 # Environment variables
 .env
 
