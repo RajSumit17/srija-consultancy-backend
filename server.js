@@ -14,7 +14,12 @@ config();
 const App = express();
 const port = process.env.PORT || 5000;
 
-App.use(cors())
+// App.use(cors())
+App.use(cors({
+  origin: "https://srija-consultancy.netlify.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 App.use(express.json());
 App.use(express.urlencoded({ extended: true }));
 App.use("/api/login/",loginRouter);
