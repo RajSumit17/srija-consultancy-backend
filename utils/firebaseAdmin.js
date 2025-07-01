@@ -4,11 +4,11 @@ import { config } from "dotenv";
 import fs from 'fs';
 
 // Use in production
-// const serviceAccount = JSON.parse(fs.readFileSync('/etc/secrets/serviceAccountKey.json', 'utf-8'));
+const serviceAccount = JSON.parse(fs.readFileSync('/etc/secrets/serviceAccountKey.json', 'utf-8'));
 
 
 // Used in development
-import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
+// import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 
 config();
 
