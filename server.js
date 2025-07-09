@@ -16,7 +16,7 @@ const port = process.env.PORT || 5000;
 
 // App.use(cors())
 App.use(cors({
-  origin: ["https://srija-consultancy.netlify.app","http://127.0.0.1:5500"],
+  origin: "https://srija-consultancy.netlify.app",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
